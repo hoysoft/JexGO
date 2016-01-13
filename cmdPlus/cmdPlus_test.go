@@ -1,8 +1,7 @@
-package spider_test
+package cmdPlus
 
 import (
 	"fmt"
-	"jex/com/golang/spider"
 	"os/exec"
 	"time"
 
@@ -24,7 +23,6 @@ func main() {
 	}
 	isFinish := false
 	cc.FinishCallback = func(e error) {
-		fmt.Println("error:", e)
 		isFinish = true
 	}
 
