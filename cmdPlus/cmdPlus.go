@@ -109,7 +109,7 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 //解析行数据
 func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.ReadCloser ) {
 	go func() {
-		for {
+		for !(this.Cmd.ProcessState!=nil && this.Cmd.ProcessState.Exited()) {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if err == nil  && !isPrefix {
