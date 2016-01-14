@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+	"github.com/hoysoft/JexGO/utils"
 )
 
 type CmdPlus struct {
@@ -92,7 +93,7 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 	if this.TriggerKeyCallback==nil {return }
 	for _,v:=range this.regexpKeys{
 		var digitsRegexp = regexp.MustCompile(v)
-		m:=FindStringSubmatchMap(digitsRegexp,line)
+		m:=utils.FindStringSubmatchMap(digitsRegexp,line)
 		if m!=nil && len(m)>0  {
 			this.TriggerKeyCallback(m)
 		}

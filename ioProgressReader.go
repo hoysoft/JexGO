@@ -1,8 +1,10 @@
-package spider
+package JexGO
 
 import (
 	"io"
 	"time"
+
+	"github.com/hoysoft/JexGO/utils"
 )
 
 type ProgressReaderCallbackFunc  func(int64, int64,string) error
@@ -77,7 +79,7 @@ func (r *Reader) drawProgress() {
 
 	// Draw
 	f := r.drawFunc()
-	r.speedstr= ByteUnitStr((r.progress-r.lastProgress) / int64((time.Now().Sub(r.lastDraw)).Seconds()))
+	r.speedstr= utils.ByteUnitStr((r.progress-r.lastProgress) / int64((time.Now().Sub(r.lastDraw)).Seconds()))
 	f(r.progress, r.Size,r.speedstr)
 
 	// Record this draw so that we don't draw again really quickly
