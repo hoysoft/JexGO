@@ -102,7 +102,7 @@ func (this *Spider)Run() {
 	this.Cnf.LogDir=utils.GetWokingDirectory("logs")
 	//logger.SetRollingDaily(this.Cnf.LogDir, martini.Env+".log")
 
-	logger.SetRollingFile(this.Cnf.LogDir, martini.Env+".log", 15, 5, logger.KB)
+	logger.SetRollingFile(this.Cnf.LogDir, martini.Env+".log", 15, 5, logger.MB)
 	this.Db.initDb()
 	defer this.Db.Db.Close()
 

@@ -34,6 +34,7 @@ func (this *CmdPlus)Exec(){
    var err error
 
 	ch := make(chan string)
+
 	go func() {
 		err = this.runCommandCh(ch)
 	}()
@@ -51,6 +52,7 @@ func (this *CmdPlus)Exec(){
 		if this.FinishCallback != nil {
 			this.FinishCallback(err)
 		}
+
 	}()
 }
 
@@ -71,19 +73,22 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 	this.parsLineData(stdoutCh,outstderr)
 //	defer close(stdoutCh)
 
-	if err := this.Cmd.Wait(); err != nil {
+	err = this.Cmd.Wait();
+	close(stdoutCh)
+	if  err != nil {
+
 		//		if exiterr, ok := err.(*exec.ExitError); ok {
 		//			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 		//				this.ReturnCode = status.ExitStatus()
 		//				//fmt.Println("ccc:",status.ExitStatus())
 		//			}
 		//		} else {
-		close(stdoutCh)
+//		close(stdoutCh)
 		return fmt.Errorf("RunCommand: cmd.Wait(): %v", err)
 		//log.Fatalf("cmd.Wait return invalid result: %v\n%s\n", err, debug.Stack())
 		//		}
 	}
-	close(stdoutCh)
+
 	return nil
 
 }
@@ -108,7 +113,7 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.ReadCloser ) 
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if err == nil  && !isPrefix {
-				stdoutCh <- string(line)
+					stdoutCh <- string(line)
 			}
 			if err == io.EOF {break}
 		}
