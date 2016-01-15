@@ -30,9 +30,9 @@ type Controller struct {
 }
 
 func (this *Controller) Init(r martini.Router){
-	this.DB=SpiderHttp.Db.Db
+	this.DB=DB
 	this.Data=make(map[string]interface{})
-    this.Data["title"]=SpiderHttp.Cnf.AppName
+    this.Data["title"]=JexHttp.Cnf.AppName
 }
 
 func (this *Controller)SetPath(path string){

@@ -6,27 +6,60 @@ import (
 	"os"
 	"runtime"
 	"fmt"
-
+	"github.com/jinzhu/gorm"
 	"github.com/hoysoft/JexGO/logger"
-
 	"github.com/hoysoft/JexGO/utils"
+
+)
+
+var (
+	JexHttp *JexGo=newJexHttp();
+	DB gorm.DB
+	Tasks *TaskManager  //后台任务管理器
+	db_Tables  []interface{};
 )
 
 
-var SpiderHttp *Spider=newSpider();
+type Config struct {
+	AppName string
+	Version string
+	Port    string
+	Env     string
+	LogDir  string
+	DBConfig DbConfig
+}
 
-type Spider struct {
-	Cnf     *AppConf
-	Db      *DB
+
+
+
+type JexGo struct {
+	Cnf     *Config
 	Martini *martini.ClassicMartini
 	controllers map[string]controllerInfo
-	Tasks *TaskManager  //后台任务管理器
 }
 
 
 type controllerInfo struct {
 	ic IController
 	handlers []martini.Handler
+}
+
+
+func (c *Config)loadfromFile(cnfile string) {
+	config:=SetConfig(cnfile)
+	//全局配置
+	c.AppName=config.GetValue("Global","appName")
+	c.Port=config.GetValue("Global","port","8888")
+	c.Version=config.GetValue("Global","version","0.0.1")
+	c.LogDir=config.GetValue("Global","logdir",utils.GetWokingDirectory("logs"))
+	c.Env=config.GetValue("Global","Env","development")
+	//dbconfig
+	c.DBConfig.DriverName=config.GetValue(c.Env,"adapter")
+	c.DBConfig.DataSourceName=config.GetValue(c.Env,"database")
+	c.DBConfig.UserName=config.GetValue(c.Env,"username")
+	c.DBConfig.Password=config.GetValue(c.Env,"password")
+	c.DBConfig.Host=config.GetValue(c.Env,"host")
+	c.DBConfig.Encoding=config.GetValue(c.Env,"encoding")
 }
 
 
@@ -37,33 +70,34 @@ type controllerInfo struct {
 //	return SpiderHttp;
 //}
 
-func newSpider(cnfFileName ...string) *Spider {
-	s := new(Spider)
-	s.controllers=make(map[string]controllerInfo)
+func newJexHttp(cnfFileName ...string) *JexGo {
 
-	s.Db = newDB()
-	if len(cnfFileName)==0{
-		cnfFileName=append(cnfFileName,"app.cnf")
-	}
-	s.Cnf = NewAppConf(cnfFileName[0])
-
-	s.checkFlag();
-	s.Martini = martini.Classic()
-	s.Tasks=NewTasks()
-	return s
+//	if SpiderHttp==nil{
+		n:=&JexGo{}
+		n.Cnf = &Config{}
+		n.Cnf.loadfromFile("app.cnf")
+		n.controllers=make(map[string]controllerInfo)
+		n.Martini = martini.Classic()
+		Tasks=NewTasks()
+		n.checkFlag();
+		return n
+//	}
+//   return SpiderHttp
 }
 
+func (this *JexGo)SetConfig(cnf *Config){
 
+}
 
 /**
  声明控制器
  */
-func (this *Spider)RegisterController(urlpath string,ic IController,h ...martini.Handler){
+func (this *JexGo)RegisterController(urlpath string,ic IController,h ...martini.Handler){
 	ic.SetPath(urlpath)
    this.controllers[urlpath]=controllerInfo{ic:ic,handlers:[]martini.Handler(h)}
 }
 
-func (this *Spider)checkFlag(){
+func (this *JexGo)checkFlag(){
 	var flagHelp bool
 	flag.BoolVar(&flagHelp, "h", false, "view this help")
 	flag.StringVar(&this.Cnf.Port, "p", this.Cnf.Port, "http listen port")
@@ -77,34 +111,33 @@ func (this *Spider)checkFlag(){
 	}
 }
 
-func (this *Spider)GetTables()[]interface{}{
+func (this *JexGo)GetTables()[]interface{}{
 	return db_Tables
 }
 
 
 
-func (this *Spider)Run() {
-
+func (this *JexGo)Run() {
 	//初始化
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	d:=NewDb(this.Cnf.DBConfig)
+	DB=d.db
+	d.AutoMigrate(db_Tables...)
+	defer DB.Close()
+
 	martini.Env=this.Cnf.Env
-	this.Db.DataSourceName=this.Cnf.DB.DataSourceName
-	this.Db.DriverName=this.Cnf.DB.DriverName
 	if martini.Env=="development" {
-		this.Db.Db.Debug()
+		DB.Debug()
 		logger.SetConsole(true)
 		logger.SetLevel(logger.DEBUG)
 	}else{
 		logger.SetConsole(false)
 		logger.SetLevel(logger.WARN)
 	}
-
-	this.Cnf.LogDir=utils.GetWokingDirectory("logs")
 	//logger.SetRollingDaily(this.Cnf.LogDir, martini.Env+".log")
 
 	logger.SetRollingFile(this.Cnf.LogDir, martini.Env+".log", 15, 5, logger.MB)
-	this.Db.initDb()
-	defer this.Db.Db.Close()
+
 
 
 	//控制器路由设置
@@ -120,3 +153,12 @@ func (this *Spider)Run() {
 	this.Martini.Run()
 }
 
+
+
+/**
+数据库部分
+ */
+
+func AddTable(table interface{}){
+	db_Tables=append(db_Tables,table)
+}

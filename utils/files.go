@@ -28,7 +28,7 @@ func GetDirectoryFiles(root string) (files []os.FileInfo, err error){
 				return nil
 			}
 			files=append(files,f)
-			println(path)
+//			println(path)
 			return nil
 		})
 	return files,err

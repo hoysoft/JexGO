@@ -26,6 +26,6 @@ func AddFuncMap(key string, funname interface{})   {
 }
 
 func GetAppTitle() string{
-	return SpiderHttp.Cnf.AppName
+	return JexHttp.Cnf.AppName
 }
 

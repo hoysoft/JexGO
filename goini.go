@@ -28,11 +28,19 @@ func (c *CnfConfig) GetValue(section, name string, defval ...interface{}) string
 	for _, v := range conf {
 		for key, value := range v {
 			if key == section {
-				return value[name]
+				if len(value[name])==0 && len(defval)>0{
+					return defval[0].(string)
+                }else{
+					return value[name]
+				}
 			}
 		}
 	}
-	return defval[0].(string)
+	if len(defval)>0{
+		return defval[0].(string)
+	}else{
+		return ""
+	}
 }
 
 //Set the corresponding value of the key value, if not add, if there is a key change

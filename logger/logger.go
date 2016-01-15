@@ -300,3 +300,9 @@ func fileCheck() {
 		logObj.rename()
 	}
 }
+
+func CheckFatal(err error, msg string) {
+	if err != nil {
+		Fatal(msg, err)
+	}
+}
