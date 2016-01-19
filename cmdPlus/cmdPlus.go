@@ -1,7 +1,9 @@
 package cmdPlus
 import (
 	"bufio"
+//	"bytes"
 	"io"
+//	"strings"
 	"regexp"
 	"fmt"
 	"os/exec"
@@ -57,6 +59,14 @@ func (this *CmdPlus)Exec(){
 }
 
 func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
+//	w := bytes.NewBuffer(make([]byte, 0))
+//	bw := bufio.NewWriter(w)
+//	r := strings.NewReader("")
+//	br := bufio.NewReader(r)
+//	rw := bufio.NewReadWriter(br, bw)
+//	this.Cmd.Stdout = rw
+//	this.Cmd.Stderr = rw
+//	this.parsLineData(stdoutCh,rw)
 	output, err := this.Cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("RunCommand: cmd.StdoutPipe(): %v", err)
@@ -71,10 +81,10 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 
 	this.parsLineData(stdoutCh,output)
 	this.parsLineData(stdoutCh,outstderr)
-//	defer close(stdoutCh)
+
 
 	err = this.Cmd.Wait();
-	close(stdoutCh)
+	defer close(stdoutCh)
 	if  err != nil {
 
 		//		if exiterr, ok := err.(*exec.ExitError); ok {
@@ -83,7 +93,6 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 		//				//fmt.Println("ccc:",status.ExitStatus())
 		//			}
 		//		} else {
-//		close(stdoutCh)
 		return fmt.Errorf("RunCommand: cmd.Wait(): %v", err)
 		//log.Fatalf("cmd.Wait return invalid result: %v\n%s\n", err, debug.Stack())
 		//		}
@@ -107,9 +116,9 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 }
 
 //解析行数据
-func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.ReadCloser ) {
+func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 	go func() {
-		for !(this.Cmd.ProcessState!=nil && this.Cmd.ProcessState.Exited()) {
+		for this.Cmd.ProcessState==nil {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if err == nil  && !isPrefix {
