@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"io"
+	"strings"
 	"crypto/rand"
 )
 
@@ -32,11 +33,18 @@ func GetGuid() string {
 //xxtea 加密
 func XXEncrypt(str, key string) string {
 	encrypt_data:= Encrypt([]byte(str), []byte(key))
-	return base64.StdEncoding.EncodeToString(encrypt_data)
+	b4data:= base64.StdEncoding.EncodeToString(encrypt_data)
+	b4data= strings.Replace(b4data,"+", "-",-1)
+	b4data= strings.Replace(b4data,"/", "_",-1)
+	b4data= strings.Replace(b4data,"=", "~",-1)
+	return b4data
 }
 
 //xxtea 解密
 func XXDecrypt(str, key string) (string,error) {
+	str= strings.Replace(str,"-", "+",-1)
+	str= strings.Replace(str,"_", "/",-1)
+	str= strings.Replace(str,"~", "=",-1)
 	encrypt_data,err:=base64.StdEncoding.DecodeString(str)
 	if err!=nil{
 		return "",err
