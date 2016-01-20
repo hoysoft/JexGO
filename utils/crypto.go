@@ -27,3 +27,20 @@ func GetGuid() string {
 	}
 	return GetMd5String(base64.URLEncoding.EncodeToString(b))
 }
+
+
+//xxtea 加密
+func XXEncrypt(str, key string) string {
+	encrypt_data:= Encrypt([]byte(str), []byte(key))
+	return base64.StdEncoding.EncodeToString(encrypt_data)
+}
+
+//xxtea 解密
+func XXDecrypt(str, key string) (string,error) {
+	encrypt_data,err:=base64.StdEncoding.DecodeString(str)
+	if err!=nil{
+		return "",err
+	}
+	return  string(Decrypt(encrypt_data, []byte(key))),nil
+}
+
