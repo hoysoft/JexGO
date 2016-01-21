@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"time"
 	"github.com/hoysoft/JexGO/utils"
+	"github.com/hoysoft/JexGO/logger"
 )
 
 type CmdPlus struct {
@@ -57,6 +58,8 @@ func (this *CmdPlus)Exec(){
 
 	}()
 }
+
+
 
 func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 //	w := bytes.NewBuffer(make([]byte, 0))
@@ -115,10 +118,18 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 
 }
 
+
+
 //解析行数据
 func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 	go func() {
-		for this.Cmd.ProcessState==nil {
+		defer func(){
+			err:=utils.CatchPanic()
+			if err!=""{
+				logger.Error(err)
+			}
+		}
+		for  {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if err == nil  && !isPrefix {
