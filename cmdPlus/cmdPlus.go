@@ -124,7 +124,6 @@ func (this *CmdPlus)regexpTriggerKeys(line string) {
 
 //解析行数据
 func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitChan chan  int) {
-	  exitrun:=false
 	go func() {
 		//		defer func(){
 		//			err:=utils.CatchPanic()
@@ -136,10 +135,10 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitC
 		//this.Cmd.ProcessState==nil
 
 
-		for !exitrun {
+		for {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
-			if !exitrun && err == nil  && !isPrefix {
+			if   err == nil  && !isPrefix && len(line)>0{
 				stdoutCh <- string(line)
 
 			}
@@ -147,12 +146,7 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitC
 		}
 	}()
 
-	go func() {
-		select {
-		case <-exitChan:
-			exitrun=true
-		}
-	}()
+
 }
 
 //设置正则表达式触发回调
