@@ -13,28 +13,28 @@ import (
 )
 
 type CmdPlus struct {
-	Cmd *exec.Cmd
-	ReturnCode int
-	TimedOut   bool
-	Elapsed    time.Duration
-	regexpKeys  []string
+	Cmd                *exec.Cmd
+	ReturnCode         int
+	TimedOut           bool
+	Elapsed            time.Duration
+	regexpKeys         []string
 	TriggerKeyCallback TriggerKeyCallbackFunc ////正则表达式匹配时触发回调
-	FinishCallback FinishCallbackFunc
-	OutPutCallback OutPutCallbackFunc
+	FinishCallback     FinishCallbackFunc
+	OutPutCallback     OutPutCallbackFunc
 }
 
-type FinishCallbackFunc func (error);
-type TriggerKeyCallbackFunc func (map[string]string);
-type OutPutCallbackFunc func (string);
+type FinishCallbackFunc func(error);
+type TriggerKeyCallbackFunc func(map[string]string);
+type OutPutCallbackFunc func(string);
 
-func NewCmdPlus(cmd *exec.Cmd, workDir string)*CmdPlus{
-	c:=&CmdPlus{Cmd:cmd}
-	c.Cmd.Dir=workDir
+func NewCmdPlus(cmd *exec.Cmd, workDir string) *CmdPlus {
+	c := &CmdPlus{Cmd:cmd}
+	c.Cmd.Dir = workDir
 	return c
 }
 
-func (this *CmdPlus)Exec(){
-   var err error
+func (this *CmdPlus)Exec() {
+	var err error
 
 	ch := make(chan string)
 
@@ -47,7 +47,7 @@ func (this *CmdPlus)Exec(){
 			//正则表达式提取关键字触发回调
 			this.regexpTriggerKeys(v)
 			//输出信息
-			if this.OutPutCallback!=nil {
+			if this.OutPutCallback != nil {
 				this.OutPutCallback(v)
 			}
 		}
@@ -62,14 +62,14 @@ func (this *CmdPlus)Exec(){
 
 
 func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
-//	w := bytes.NewBuffer(make([]byte, 0))
-//	bw := bufio.NewWriter(w)
-//	r := strings.NewReader("")
-//	br := bufio.NewReader(r)
-//	rw := bufio.NewReadWriter(br, bw)
-//	this.Cmd.Stdout = rw
-//	this.Cmd.Stderr = rw
-//	this.parsLineData(stdoutCh,rw)
+	//	w := bytes.NewBuffer(make([]byte, 0))
+	//	bw := bufio.NewWriter(w)
+	//	r := strings.NewReader("")
+	//	br := bufio.NewReader(r)
+	//	rw := bufio.NewReadWriter(br, bw)
+	//	this.Cmd.Stdout = rw
+	//	this.Cmd.Stderr = rw
+	//	this.parsLineData(stdoutCh,rw)
 	output, err := this.Cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("RunCommand: cmd.StdoutPipe(): %v", err)
@@ -82,13 +82,15 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 		return fmt.Errorf("RunCommand: cmd.Start(): %v", err)
 	}
 
-	this.parsLineData(stdoutCh,output)
-	this.parsLineData(stdoutCh,outstderr)
+	exitChan := make(chan int)
+	this.parsLineData(stdoutCh, output,exitChan)
+	this.parsLineData(stdoutCh, outstderr,exitChan)
 
 
 	err = this.Cmd.Wait();
+	exitChan <- 1
 	defer close(stdoutCh)
-	if  err != nil {
+	if err != nil {
 
 		//		if exiterr, ok := err.(*exec.ExitError); ok {
 		//			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
@@ -106,12 +108,12 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 }
 
 //正则表达式提取关键字触发回调
-func (this *CmdPlus)regexpTriggerKeys(line string){
-	if this.TriggerKeyCallback==nil {return }
-	for _,v:=range this.regexpKeys{
+func (this *CmdPlus)regexpTriggerKeys(line string) {
+	if this.TriggerKeyCallback == nil {return }
+	for _, v := range this.regexpKeys {
 		var digitsRegexp = regexp.MustCompile(v)
-		m:=utils.FindStringSubmatchMap(digitsRegexp,line)
-		if m!=nil && len(m)>0  {
+		m := utils.FindStringSubmatchMap(digitsRegexp, line)
+		if m != nil && len(m) > 0 {
 			this.TriggerKeyCallback(m)
 		}
 	}
@@ -121,31 +123,49 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 
 
 //解析行数据
-func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
+func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitChan chan  int) {
 	go func() {
-//		defer func(){
-//			err:=utils.CatchPanic()
-//			if err!=nil{
-//				logger.Error(err)
-//			}
-//			return
-//		}()
+		//		defer func(){
+		//			err:=utils.CatchPanic()
+		//			if err!=nil{
+		//				logger.Error(err)
+		//			}
+		//			return
+		//		}()
 		//this.Cmd.ProcessState==nil
-		for  this.Cmd.ProcessState==nil {
-			r := bufio.NewReader(output)
-			line, isPrefix, err := r.ReadLine()
-			if this.Cmd.ProcessState==nil && err == nil  && !isPrefix {
-			   stdoutCh <- string(line)
 
-			}
-			if err == io.EOF {break}
+
+//		for this.Cmd.ProcessState == nil {
+//			r := bufio.NewReader(output)
+//			line, isPrefix, err := r.ReadLine()
+//			if this.Cmd.ProcessState == nil && err == nil  && !isPrefix {
+//				stdoutCh <- string(line)
+//
+//			}
+//			if err == io.EOF {break}
+//		}
+	}()
+
+	go func() {
+		select {
+		case <-exitChan:
+			return
+		default:
+				for {
+					r := bufio.NewReader(output)
+					line, isPrefix, err := r.ReadLine()
+					if  err == nil  && !isPrefix {
+						stdoutCh <- string(line)
+					}
+					if err == io.EOF {break}
+				}
 		}
 	}()
 }
 
 //设置正则表达式触发回调
-func (this *CmdPlus)SetTriggerRegexpKeys(m ...string)*CmdPlus {
-	this.regexpKeys=m
+func (this *CmdPlus)SetTriggerRegexpKeys(m ...string) *CmdPlus {
+	this.regexpKeys = m
 	return this
 }
 
