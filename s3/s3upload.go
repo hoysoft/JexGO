@@ -4,6 +4,8 @@ import (
 	"github.com/mitchellh/goamz/aws"
 	"github.com/mitchellh/goamz/s3"
 	"os"
+	"path/filepath"
+	"fmt"
 )
 
 type S3Config struct {
@@ -15,9 +17,10 @@ type S3Config struct {
 	Acl       string
 }
 
-func (s *S3Config)Upload()error {
+
+func (s *S3Config)Upload(fileDir string)error {
 	if len(s.Acl)==0{
-		s.Acl=string(s3.Private)
+		s.Acl=string(s3.PublicReadWrite)
 	}
 	auth, err := aws.GetAuth(s.AccessKey,s.SecretKey)
 	s3client := s3.New(auth, aws.Region{Name: "us-east-1", S3Endpoint: s.S3Endpoint })
@@ -28,15 +31,22 @@ func (s *S3Config)Upload()error {
 		return err
 	}
 
-	file, err := os.Open(s.File)
+	file, err := os.Open(filepath.Join(fileDir,s.File))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	err = b.PutReader(file.Name(), file, f.Size(),"application/octet-stream", s3.ACL(s.Acl))
+//	progressR := &JexGO.Reader{
+//		Reader: file,
+//		Size:   f.Size(),
+//		DrawFunc: progressFunc,
+//	}
+
+	err = b.PutReader(s.File, file, f.Size(),"application/octet-stream", s3.ACL(s.Acl))
 	//err = b.Put("zoujtw2015-12-16.mkv", file, "content-type", s3.PublicReadWrite)
 	if err!=nil{
 		return err
 	}
+	fmt.Println("s3 upload file succeed!!!",file.Name())
 	return nil
 }

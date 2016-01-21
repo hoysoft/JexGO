@@ -81,14 +81,13 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 	if err := this.Cmd.Start(); err != nil {
 		return fmt.Errorf("RunCommand: cmd.Start(): %v", err)
 	}
-
-	exitChan := make(chan int)
-	this.parsLineData(stdoutCh, output,exitChan)
-	this.parsLineData(stdoutCh, outstderr,exitChan)
+	exitcode:=false
+	this.parsLineData(stdoutCh, output,&exitcode)
+	this.parsLineData(stdoutCh, outstderr,&exitcode)
 
 
 	err = this.Cmd.Wait();
-	exitChan <- 1
+	exitcode=true
 	defer close(stdoutCh)
 	if err != nil {
 
@@ -123,26 +122,17 @@ func (this *CmdPlus)regexpTriggerKeys(line string) {
 
 
 //解析行数据
-func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitChan chan  int) {
+func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitcode *bool) {
 	go func() {
-		//		defer func(){
-		//			err:=utils.CatchPanic()
-		//			if err!=nil{
-		//				logger.Error(err)
-		//			}
-		//			return
-		//		}()
-		//this.Cmd.ProcessState==nil
-
+		 	defer utils.CatchPanic()
 
 		for this.Cmd.ProcessState==nil{
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
-			if   err == nil  && !isPrefix && len(line)>0{
+			if  !*exitcode && err == nil  && !isPrefix && len(line)>0{
 				stdoutCh <- string(line)
-
 			}
-			if err == io.EOF {break}
+			if *exitcode || err == io.EOF {break}
 		}
 	}()
 
