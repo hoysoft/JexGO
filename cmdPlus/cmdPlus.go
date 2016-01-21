@@ -123,17 +123,22 @@ func (this *CmdPlus)regexpTriggerKeys(line string){
 //解析行数据
 func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 	go func() {
-		defer func(){
-			err:=utils.CatchPanic()
-			if err!=nil{
-				logger.Error(err)
-			}
-			return
-		}()
+//		defer func(){
+//			err:=utils.CatchPanic()
+//			if err!=nil{
+//				logger.Error(err)
+//			}
+//			return
+//		}()
+		//this.Cmd.ProcessState==nil
 		for  {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if err == nil  && !isPrefix {
+				  _, ok := <- stdoutCh
+				  if !ok {
+					  break
+				  }
 					stdoutCh <- string(line)
 			}
 			if err == io.EOF {break}
