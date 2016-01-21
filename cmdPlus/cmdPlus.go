@@ -128,6 +128,7 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 			if err!=nil{
 				logger.Error(err)
 			}
+			return
 		}()
 		for  {
 			r := bufio.NewReader(output)
