@@ -125,10 +125,10 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 	go func() {
 		defer func(){
 			err:=utils.CatchPanic()
-			if err!=""{
+			if err!=nil{
 				logger.Error(err)
 			}
-		}
+		}()
 		for  {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
