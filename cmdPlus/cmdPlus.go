@@ -124,6 +124,7 @@ func (this *CmdPlus)regexpTriggerKeys(line string) {
 
 //解析行数据
 func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitChan chan  int) {
+	  exitrun:=false
 	go func() {
 		//		defer func(){
 		//			err:=utils.CatchPanic()
@@ -135,30 +136,21 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitC
 		//this.Cmd.ProcessState==nil
 
 
-//		for this.Cmd.ProcessState == nil {
-//			r := bufio.NewReader(output)
-//			line, isPrefix, err := r.ReadLine()
-//			if this.Cmd.ProcessState == nil && err == nil  && !isPrefix {
-//				stdoutCh <- string(line)
-//
-//			}
-//			if err == io.EOF {break}
-//		}
+		for !exitrun {
+			r := bufio.NewReader(output)
+			line, isPrefix, err := r.ReadLine()
+			if !exitrun && err == nil  && !isPrefix {
+				stdoutCh <- string(line)
+
+			}
+			if err == io.EOF {break}
+		}
 	}()
 
 	go func() {
 		select {
 		case <-exitChan:
-			return
-		default:
-				for {
-					r := bufio.NewReader(output)
-					line, isPrefix, err := r.ReadLine()
-					if  err == nil  && !isPrefix {
-						stdoutCh <- string(line)
-					}
-					if err == io.EOF {break}
-				}
+			exitrun=true
 		}
 	}()
 }
