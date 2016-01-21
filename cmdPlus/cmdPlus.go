@@ -135,7 +135,7 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitC
 		//this.Cmd.ProcessState==nil
 
 
-		for {
+		for this.Cmd.ProcessState==nil{
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
 			if   err == nil  && !isPrefix && len(line)>0{
