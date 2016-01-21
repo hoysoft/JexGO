@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"time"
 	"github.com/hoysoft/JexGO/utils"
-	"github.com/hoysoft/JexGO/logger"
+
 )
 
 type CmdPlus struct {
@@ -131,15 +131,12 @@ func (this *CmdPlus)parsLineData(stdoutCh chan <- string,output io.Reader ) {
 //			return
 //		}()
 		//this.Cmd.ProcessState==nil
-		for  {
+		for  this.Cmd.ProcessState==nil {
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
-			if err == nil  && !isPrefix {
-				  _, ok := <- stdoutCh
-				  if !ok {
-					  break
-				  }
-					stdoutCh <- string(line)
+			if this.Cmd.ProcessState==nil && err == nil  && !isPrefix {
+			   stdoutCh <- string(line)
+
 			}
 			if err == io.EOF {break}
 		}
