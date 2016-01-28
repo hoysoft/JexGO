@@ -11,7 +11,7 @@ import (
 type JQueryDataTable struct {
 	Ajax *jqdtb_ajax `json:"ajax"`
 	AoColumns []*JQDBTable_Column `json:"aoColumns"`
-	Language   *jqdtb_language  `json:"language"`
+	Language   *jqdtb_language  `json:"language,omitempty"`
 }
 
 type jqdtb_ajax struct {
@@ -20,14 +20,16 @@ type jqdtb_ajax struct {
 }
 
 type JQDBTable_Column struct {
-	Name string `json:"mData"`
+	DataField string `json:"mData,omitempty"`
 	Tile string `json:"sTitle"`
 	Sortable bool `json:"bSortable,omitempty"`
+	SortDataType bool `json:"sSortDataType,omitempty"` //定义数据源类型的排序(主要是input类型)，dom-text,dom-select,dom-checkbox
 	Class string `json:"sClass,omitempty"`
 	Width string `json:"sWidth,omitempty"`
 	Searchable bool `json:"bSearchable,omitempty"`
-	Type string  `json:"sType,omitempty"`
+	Type string  `json:"sType,omitempty"` //属性sType：定义这列数据类型，包括（string,numeric,date,html)。
 	Render string `json:"mRender,omitempty"`
+	Visible bool `json:"bVisible,omitempty"`
 }
 type jqdtb_language struct {
 	Url string  `json:"url"`

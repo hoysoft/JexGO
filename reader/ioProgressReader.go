@@ -1,4 +1,4 @@
-package JexGO
+package reader
 
 import (
 	"io"
