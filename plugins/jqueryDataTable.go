@@ -10,7 +10,7 @@ import (
 
 type JQueryDataTable struct {
 	Ajax *jqdtb_ajax `json:"ajax"`
-	AoColumns []*JQDBTable_Column `json:"aoColumns"`
+	Columns []*JQDBTable_Column `json:"columns"`
 	Language   *jqdtb_language  `json:"language,omitempty"`
 }
 
@@ -20,16 +20,16 @@ type jqdtb_ajax struct {
 }
 
 type JQDBTable_Column struct {
-	DataField string `json:"mData,omitempty"`
-	Tile string `json:"sTitle"`
+	DataField string `json:"data,omitempty"`
+	Tile string `json:"title"`
 	Sortable bool `json:"bSortable,omitempty"`
 	SortDataType bool `json:"sSortDataType,omitempty"` //定义数据源类型的排序(主要是input类型)，dom-text,dom-select,dom-checkbox
 	Class string `json:"sClass,omitempty"`
-	Width string `json:"sWidth,omitempty"`
-	Searchable bool `json:"bSearchable,omitempty"`
+	Width string `json:"width,omitempty"`
+	Searchable bool `json:"searchable,omitempty"`
 	Type string  `json:"sType,omitempty"` //属性sType：定义这列数据类型，包括（string,numeric,date,html)。
-	Render string `json:"mRender,omitempty"`
-	Visible bool `json:"bVisible,omitempty"`
+	Render string `json:"render,omitempty"`
+	Visible bool `json:"visible,omitempty"`
 }
 type jqdtb_language struct {
 	Url string  `json:"url"`
@@ -44,7 +44,7 @@ func NewJQueryDataTable()*JQueryDataTable{
 }
 
 func (j *JQueryDataTable)AddColumns(col ...*JQDBTable_Column)*JQueryDataTable{
-    j.AoColumns=append(j.AoColumns,col...)
+    j.Columns=append(j.Columns,col...)
 	return j
 }
 
