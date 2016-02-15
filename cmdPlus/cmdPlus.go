@@ -37,11 +37,12 @@ func (this *CmdPlus)Exec() {
 	var err error
 
 	ch := make(chan string)
-
+	cherr := make(chan string)
 	go func() {
-		err = this.runCommandCh(ch)
+		err = this.runCommandCh(ch,cherr)
 	}()
 
+	isFinish:=false;
 	go func() {
 		for v := range ch {
 			//正则表达式提取关键字触发回调
@@ -52,16 +53,31 @@ func (this *CmdPlus)Exec() {
 			}
 		}
 
-		if this.FinishCallback != nil {
+		if isFinish  && this.FinishCallback != nil {
 			this.FinishCallback(err)
 		}
+		isFinish=true;
+	}()
 
+	go func() {
+		for v := range cherr {
+			//正则表达式提取关键字触发回调
+			this.regexpTriggerKeys(v)
+			//输出信息
+			if this.OutPutCallback != nil {
+				this.OutPutCallback(v)
+			}
+		}
+
+		if  isFinish  && this.FinishCallback != nil {
+			this.FinishCallback(err)
+		}
+		isFinish=true;
 	}()
 }
 
 
-
-func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
+func (this *CmdPlus)runCommandCh(stdoutCh,stderrCh chan <- string) error {
 	//	w := bytes.NewBuffer(make([]byte, 0))
 	//	bw := bufio.NewWriter(w)
 	//	r := strings.NewReader("")
@@ -81,14 +97,14 @@ func (this *CmdPlus)runCommandCh(stdoutCh chan <- string) error {
 	if err := this.Cmd.Start(); err != nil {
 		return fmt.Errorf("RunCommand: cmd.Start(): %v", err)
 	}
-	exitcode:=false
-	this.parsLineData(stdoutCh, output,&exitcode)
-	this.parsLineData(stdoutCh, outstderr,&exitcode)
-
+	//exitcode:=false
+	this.parsLineData(stdoutCh, output)
+	this.parsLineData(stderrCh, outstderr)
 
 	err = this.Cmd.Wait();
-	exitcode=true
-	defer close(stdoutCh)
+	//exitcode=true
+	//defer close(stdoutCh)
+
 	if err != nil {
 
 		//		if exiterr, ok := err.(*exec.ExitError); ok {
@@ -116,26 +132,28 @@ func (this *CmdPlus)regexpTriggerKeys(line string) {
 			this.TriggerKeyCallback(m)
 		}
 	}
-
 }
 
 
 
 //解析行数据
-func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader,exitcode *bool) {
+func (this *CmdPlus)parsLineData(stdoutCh chan <- string, output io.Reader ) {
 	go func() {
-		 	defer utils.CatchPanic()
+		 defer func(){
+			utils.CatchPanic()
+			 close(stdoutCh)
+		}()
 
-		for this.Cmd.ProcessState==nil{
+
+		for  this.Cmd.ProcessState==nil{
 			r := bufio.NewReader(output)
 			line, isPrefix, err := r.ReadLine()
-			if  !*exitcode && err == nil  && !isPrefix && len(line)>0{
+			if   err == nil  && !isPrefix && len(line)>0{
 				stdoutCh <- string(line)
 			}
-			if *exitcode || err == io.EOF {break}
+			if  err == io.EOF {break}
 		}
 	}()
-
 
 }
 
