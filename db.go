@@ -73,7 +73,7 @@ func NewDb(Cnf  DbConfig) *Db {
 
 func (this *Db)AutoMigrate(tables ...interface{}) *Db{
 	if this.Cnf.DriverName=="mysql" {
-		this.db.Set("gorm:table_options", "ENGINE=InnoDB").AutoMigrate(tables...)
+		this.db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8").AutoMigrate(tables...)
 	}else{
 		this.db.AutoMigrate(tables...)
 	}

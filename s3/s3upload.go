@@ -27,7 +27,11 @@ func (s *S3Config)Upload(fileDir string,progressFunc reader.ProgressReaderCallba
 	s3client := s3.New(auth, aws.Region{Name: "us-east-1", S3Endpoint: s.S3Endpoint })
 
 	filename :=filepath.Join(fileDir,s.File)
-	b := s3client.Bucket(s.BucketName)
+	b,err:=s.Bucket(s3client)
+	if err != nil {
+		return err
+	}
+
 	f, err := os.Stat(filename)
 	if err != nil {
 		return err
@@ -51,5 +55,26 @@ func (s *S3Config)Upload(fileDir string,progressFunc reader.ProgressReaderCallba
 	}
 	fmt.Println("s3 upload file succeed!!!",file.Name())
 
+	return nil
+}
+
+func (s *S3Config)Bucket(client *s3.S3) (*s3.Bucket,error){
+	b := client.Bucket(s.BucketName)
+	resp, err := client.ListBuckets()
+	if err != nil {
+		return b,err
+	}
+	if bucketOfName(resp.Buckets,s.BucketName)==nil{
+		b.PutBucket(s3.ACL(s.Acl))
+	}
+	return b,nil
+}
+
+func bucketOfName(buckets []s3.Bucket,name string) *s3.Bucket {
+	for _,b:=range buckets{
+		if b.Name==name {
+			return &b
+		}
+	}
 	return nil
 }
