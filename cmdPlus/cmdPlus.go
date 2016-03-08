@@ -101,7 +101,7 @@ func (this *CmdPlus)runCommandCh(stdoutCh,stderrCh chan <- string) error {
 	this.parsLineData(stdoutCh, output)
 	this.parsLineData(stderrCh, outstderr)
 
-	err = this.Cmd.Wait();
+	err = this.Cmd.Run();
 	//exitcode=true
 	//defer close(stdoutCh)
 
