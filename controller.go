@@ -25,7 +25,7 @@ type IController interface {
 
 type Controller struct {
 	templatePath string
-	DB  gorm.DB
+	DB  *gorm.DB
 	Data map[string]interface{}
 }
 
@@ -79,7 +79,7 @@ type TablePaginatorConfig struct {
 }
 
 //分页读取数据
-func (this *Controller)GetTablePaginatorData(tableDB *gorm.DB,req *http.Request,limit int64)   {
+func (this *Controller)GetTablePaginatorData(tableDB *gorm.DB,req *http.Request,limit int)   {
 
 	p := req.URL.Query().Get("p")
 	pageNo, _ := strconv.Atoi(p)
@@ -87,7 +87,7 @@ func (this *Controller)GetTablePaginatorData(tableDB *gorm.DB,req *http.Request,
 		pageNo = 1
 	}
 	//var limit int64 = 10 //每页10行显示
-	var offset int64 = (int64(pageNo) - 1) * limit //起始位置
+	var offset  = (pageNo - 1) * limit //起始位置
 
     tbDB:=tableDB.Limit(limit).Offset(offset)
 	var count int

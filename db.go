@@ -10,7 +10,7 @@ import (
 )
 type Db struct {
     Cnf  DbConfig
-	db gorm.DB
+	db *gorm.DB
 }
 
 type DbConfig struct {
@@ -32,7 +32,7 @@ type IDB interface {
 
 func NewDb(Cnf  DbConfig) *Db {
 	var err error
-	var db gorm.DB
+	var db *gorm.DB
 	switch Cnf.DriverName {
 	case "sqlite3":
 		db, err = gorm.Open("sqlite3", Cnf.DataSourceName)

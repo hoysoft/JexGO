@@ -15,7 +15,7 @@ import (
 
 var (
 	JexHttp *JexGo = newJexHttp()
-	DB gorm.DB
+	DB *gorm.DB
 	Tasks *TaskManager  //后台任务管理器
 	db_Tables  []interface{}
 
