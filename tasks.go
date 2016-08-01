@@ -9,14 +9,14 @@ type TaskManager struct {
 	breaktag bool
 }
 
-//新建task管理器，并指定最大线程数量
+//新建task管理器，并指定最大并发数量
 func NewTasks()*TaskManager{
 	t:=new(TaskManager)
 	t.tasks=make(map[interface{}] func() error)
 	return t
 }
 
-//开始task服务，并指定最大线程数量
+//开始task服务，并指定最并发数量
 func (t *TaskManager)StartServe(maxGoroutineCount int){
 	t.breaktag=false
 	var maxGoroutine  chan int
@@ -44,6 +44,7 @@ func (t *TaskManager)StartServe(maxGoroutineCount int){
 
 func (t *TaskManager)AddTask(tag interface{}, task func() error){
 	t.tasks[tag]=task
+	fmt.Println("add task:",tag)
 }
 
 
